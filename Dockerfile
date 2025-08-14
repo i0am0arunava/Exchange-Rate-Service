@@ -8,18 +8,20 @@ RUN apk add --no-cache git
 
 WORKDIR /app
 
-# Copy only go.mod & go.sum first for caching
+# Copy go.mod and go.sum first (cache deps)
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Now copy the rest of the source code
-COPY . .
+# Copy only necessary source files (avoid copying tests, docs, etc.)
+COPY cmd/ cmd/
+COPY internal/ internal/
+COPY .env .
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o exchange-rate-service ./cmd/server
 
 # --------------------------
-# 2️⃣ Runtime stage (small Alpine image)
+# 2️⃣ Runtime stage
 # --------------------------
 FROM alpine:3.19
 
@@ -27,10 +29,7 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 
-# Copy binary from builder
 COPY --from=builder /app/exchange-rate-service .
-
-# ✅ Copy the .env file into container
 COPY .env .
 
 EXPOSE 8080

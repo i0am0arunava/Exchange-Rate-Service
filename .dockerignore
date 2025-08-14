@@ -1,4 +1,4 @@
-# Git history
+# Git
 .git
 .gitignore
 
@@ -7,7 +7,6 @@ bin/
 build/
 dist/
 *.exe
-*.exe~
 *.dll
 *.so
 *.dylib
@@ -15,29 +14,25 @@ dist/
 *.out
 exchange-rate-service
 
-# Dependencies (re-download in build stage)
+# Dependencies (vendor — we rebuild inside container)
 vendor/
 
-# IDE / Editor config
+# Editors
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
 
-# Logs and temp
+# Logs & temp
 *.log
 *.tmp
 
 # Test cache
 coverage.out
 
-# Exclude Dockerfiles themselves if not needed
-Dockerfile
-docker-compose*.yml
-
-# IMPORTANT: keep .env for runtime
+# Keep env files
 !*.env
