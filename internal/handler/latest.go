@@ -19,7 +19,7 @@ func GetLatestRate(w http.ResponseWriter, r *http.Request) {
 
 	cacheKey := fmt.Sprintf("latest:%s", base)
 
-	
+	// 1️⃣ Try to get from Memcached
 	item, err := config.MC.Get(cacheKey)
 	if err == nil {
 		// Cache hit
@@ -35,11 +35,11 @@ func GetLatestRate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	
+	// 2️⃣ Cache miss — fetch from API and store
 	service.RefreshLatestRates(base)
 
 
-	
+	// Try again after refresh
 	item, err = config.MC.Get(cacheKey)
 	if err != nil {
 		http.Error(w, "could not fetch rates", http.StatusInternalServerError)

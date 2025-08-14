@@ -6,7 +6,8 @@ import (
 	"io"
 	"net/http"
 	"time"
-
+    "os"
+	"log"
 	"exchange-rate-service/internal/config"
 
 	"github.com/bradfitz/gomemcache/memcache"
@@ -56,13 +57,21 @@ func GetHistoricalRate(w http.ResponseWriter, r *http.Request) {
 		if item, err := config.MC.Get(cacheKey); err == nil {
 			return item.Value, nil
 		}
-
+        
 		// Fetch from API
+
+		 historicalBaseURL := os.Getenv("HISTORICAL_API_BASE_URL")
+         historicalAPIKey := os.Getenv("HISTORICAL_API_KEY")
+
+         if historicalBaseURL == "" || historicalAPIKey == "" {
+         log.Fatal("HISTORICAL_API_BASE_URL or HISTORICAL_API_KEY is not set in environment variables")
+         }
 		apiURL := fmt.Sprintf(
-			"http://api.exchangerate.host/timeframe?access_key=%s&start_date=%s&end_date=%s&source=%s&currencies=%s&format=1",
-			"3fc5b2c59ffad185558841035e114b9c",
-			dateStr, dateStr, source, target,
-		)
+       "%s?access_key=%s&start_date=%s&end_date=%s&source=%s&currencies=%s&format=1",
+        historicalBaseURL,
+        historicalAPIKey,
+       dateStr, dateStr, source, target,
+       )
 
 		resp, err := http.Get(apiURL)
 		if err != nil {

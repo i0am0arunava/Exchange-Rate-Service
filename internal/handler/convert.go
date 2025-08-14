@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"os"
+	"log"
 
 	"exchange-rate-service/internal/config"
 	"exchange-rate-service/internal/service"
@@ -33,10 +35,20 @@ func ConvertAmount(w http.ResponseWriter, r *http.Request) {
 		}
 
 		
-		apiURL := fmt.Sprintf(
-			"http://api.exchangerate.host/convert?access_key=%s&from=%s&to=%s&amount=%s&format=1&date=%s",
-			"3fc5b2c59ffad185558841035e114b9c", from, to, amountStr, dateStr,
-		)
+		  historicalBaseURL := os.Getenv("HISTORICAL_API_BASE_URL")
+         historicalAPIKey := os.Getenv("HISTORICAL_API_KEY")
+
+          if historicalBaseURL == "" || historicalAPIKey == "" {
+          log.Fatal("HISTORICAL_API_BASE_URL or HISTORICAL_API_KEY is not set in environment variables")
+           }
+
+             apiURL := fmt.Sprintf(
+                "%s/convert?access_key=%s&from=%s&to=%s&amount=%s&format=1&date=%s",
+              historicalBaseURL,
+             historicalAPIKey,
+             from, to, amountStr, dateStr,
+             )
+
 
 		resp, err := http.Get(apiURL)
 		if err != nil {

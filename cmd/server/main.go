@@ -4,12 +4,45 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"log"
     "time"
 	"github.com/bradfitz/gomemcache/memcache"
 	"exchange-rate-service/internal/config" 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"exchange-rate-service/internal/service"
-    "exchange-rate-service/internal/handler")
+    "exchange-rate-service/internal/handler"
+)
+
+
+
+
+
+func init() {
+	// Load .env file into environment variables
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: No .env file found, using system env variables")
+	}
+
+	// Optional: check if important env vars are loaded
+	if os.Getenv("API_BASE_URL") == "" {
+		log.Fatal("API_BASE_URL is not set in env")
+	}
+	if os.Getenv("HISTORICAL_API_BASE_URL") == "" {
+		log.Fatal("HISTORICAL_API_BASE_URL is not set in env")
+	}
+	if os.Getenv("HISTORICAL_API_KEY") == "" {
+		log.Fatal("HISTORICAL_API_KEY is not set in env")
+	}
+
+	fmt.Println("Environment variables loaded successfully")
+}
+
+
+
+
+
+
 
 func main() {
 	port := os.Getenv("PORT")

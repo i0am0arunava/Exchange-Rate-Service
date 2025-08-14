@@ -5,21 +5,26 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	
+	
     "exchange-rate-service/internal/config"
 	"github.com/bradfitz/gomemcache/memcache"
+	
 )
 
 
 func RefreshLatestRates(base string) {
 	   
 
+   
+	 baseURL := "https://v6.exchangerate-api.com/v6/b4424af80f21de45e428d97d"
+     
+
 	   // Use singleflight to ensure only one API fetch for the same base currency
       // is performed at a time, avoiding duplicate concurrent requests.
+	  
 	_, err, _ := config.SFLatestRates.Do(base, func() (interface{}, error) {
-		apiURL := fmt.Sprintf(
-			"https://v6.exchangerate-api.com/v6/b4424af80f21de45e428d97d/latest/%s",
-			base,
-		)
+		apiURL := fmt.Sprintf("%s/latest/%s", baseURL, base)
 
 		resp, err := http.Get(apiURL)
 		if err != nil {
