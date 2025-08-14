@@ -1,0 +1,43 @@
+# Git history
+.git
+.gitignore
+
+# Build artifacts
+bin/
+build/
+dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+exchange-rate-service
+
+# Dependencies (re-download in build stage)
+vendor/
+
+# IDE / Editor config
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+*.tmp
+
+# Test cache
+coverage.out
+
+# Exclude Dockerfiles themselves if not needed
+Dockerfile
+docker-compose*.yml
+
+# IMPORTANT: keep .env for runtime
+!*.env

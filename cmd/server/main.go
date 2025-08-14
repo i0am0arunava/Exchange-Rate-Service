@@ -71,7 +71,7 @@ func startHourlyRefresh(base string) {
 	ticker := time.NewTicker(time.Hour)
 	defer ticker.Stop()
 
-	// run immediately once at startup
+	
 	service.RefreshLatestRates(base, &latestRates)
 
 	for range ticker.C {
