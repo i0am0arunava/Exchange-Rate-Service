@@ -1,70 +1,115 @@
 package handler
 
 import (
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "strconv"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strconv"
 
-    "exchange-rate-service/internal/domain"
-    "exchange-rate-service/internal/service"
+	"exchange-rate-service/internal/config"
+	"exchange-rate-service/internal/service"
+
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
-type ConvertHandler struct {
-    Cache *domain.LatestCache
-}
+// ConvertAmount handles currency conversion requests.
+// Supports both latest and historical rates.
+func ConvertAmount(w http.ResponseWriter, r *http.Request) {
+	from := r.URL.Query().Get("from")
+	to := r.URL.Query().Get("to")
+	amountStr := r.URL.Query().Get("amount")
+	dateStr := r.URL.Query().Get("date")
 
-func (h *ConvertHandler) ConvertAmount(w http.ResponseWriter, r *http.Request) {
-    from := r.URL.Query().Get("from")
-    to := r.URL.Query().Get("to")
-    amountStr := r.URL.Query().Get("amount")
+	if dateStr != "" {
+		cacheKey := fmt.Sprintf("historical:%s:%s:%s:%s", from, to, amountStr, dateStr)
 
-    if from == "" || to == "" || amountStr == "" {
-        http.Error(w, "missing from, to or amount query param", http.StatusBadRequest)
-        return
-    }
+		
+		if item, err := config.MC.Get(cacheKey); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("X-Cache", "HIT")
+			w.Write(item.Value)
+			return
+		}
 
-    amount, err := strconv.ParseFloat(amountStr, 64)
-    if err != nil {
-        http.Error(w, "invalid amount", http.StatusBadRequest)
-        return
-    }
+		
+		apiURL := fmt.Sprintf(
+			"http://api.exchangerate.host/convert?access_key=%s&from=%s&to=%s&amount=%s&format=1&date=%s",
+			"3fc5b2c59ffad185558841035e114b9c", from, to, amountStr, dateStr,
+		)
 
-    // Lookup rates in cache
-    h.Cache.Mu.RLock()
-    fromRates, ok := h.Cache.Data[from]
-    h.Cache.Mu.RUnlock()
+		resp, err := http.Get(apiURL)
+		if err != nil {
+			http.Error(w, "failed to fetch historical conversion: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer resp.Body.Close()
 
-    if !ok {
-        // Not in cache — fetch from external API
-        service.RefreshLatestRates(from, h.Cache)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			http.Error(w, "failed to read API response: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-        // Try cache again
-        h.Cache.Mu.RLock()
-        fromRates, ok = h.Cache.Data[from]
-        h.Cache.Mu.RUnlock()
+		
+		config.MC.Set(&memcache.Item{Key: cacheKey, Value: body, Expiration: 86400})
 
-        if !ok {
-            http.Error(w, "could not fetch rates for "+from, http.StatusInternalServerError)
-            return
-        }
-    }
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Cache", "MISS")
+		w.Write(body)
+		return
+	}
 
-    rate, ok := fromRates[to]
-    if !ok {
-        http.Error(w, fmt.Sprintf("no rate from %s to %s", from, to), http.StatusNotFound)
-        return
-    }
+	
+	if from == "" || to == "" || amountStr == "" {
+		http.Error(w, "missing from, to or amount query param", http.StatusBadRequest)
+		return
+	}
 
-    // Do conversion
-    result := amount * rate
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		http.Error(w, "invalid amount", http.StatusBadRequest)
+		return
+	}
 
-    json.NewEncoder(w).Encode(map[string]interface{}{
-        "from":      from,
-        "to":        to,
-        "amount":    amount,
-        "rate":      rate,
-        "result":    result,
-        "cache_hit": true,
-    })
+	cacheKey := fmt.Sprintf("latest:%s", from)
+	item, err := config.MC.Get(cacheKey)
+	if err != nil {
+		if err == memcache.ErrCacheMiss {
+			// Not in cache — fetch from API
+			service.RefreshLatestRates(from)
+
+			item, err = config.MC.Get(cacheKey)
+			if err != nil {
+				http.Error(w, "could not fetch rates for "+from, http.StatusInternalServerError)
+				return
+			}
+		} else {
+			http.Error(w, "error fetching from cache: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	var fromRates map[string]float64
+	if err := json.Unmarshal(item.Value, &fromRates); err != nil {
+		http.Error(w, "error decoding cached rates: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rate, ok := fromRates[to]
+	if !ok {
+		http.Error(w, fmt.Sprintf("no rate from %s to %s", from, to), http.StatusNotFound)
+		return
+	}
+
+	result := amount * rate
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"from":      from,
+		"to":        to,
+		"amount":    amount,
+		"rate":      rate,
+		"result":    result,
+		"cache_hit": true,
+	})
 }

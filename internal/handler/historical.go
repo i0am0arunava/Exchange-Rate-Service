@@ -1,31 +1,23 @@
 package handler
 
 import (
+
 	"fmt"
 	"io"
 	"net/http"
 	"time"
-     "os"
-	"exchange-rate-service/internal/domain"
+
+	"exchange-rate-service/internal/config"
+
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
-type HistoricalHandler struct {
-	Cache *domain.HistRespCache
-}
 
-func (h *HistoricalHandler) GetHistoricalRate(w http.ResponseWriter, r *http.Request) {
+
+func GetHistoricalRate(w http.ResponseWriter, r *http.Request) {
 	dateStr := r.URL.Query().Get("date")
 	source := r.URL.Query().Get("source")
 	target := r.URL.Query().Get("target")
- 
-
-	apiBaseURL := os.Getenv("HISTORICAL_API_BASE_URL")
-    apiKey := os.Getenv("HISTORICAL_API_KEY")
-    if apiBaseURL == "" || apiKey == "" {
-	http.Error(w, "historical API configuration missing", http.StatusInternalServerError)
-	return
-    }
-
 
 	if dateStr == "" || source == "" || target == "" {
 		http.Error(w, "missing date, source, or target query param", http.StatusBadRequest)
@@ -43,51 +35,69 @@ func (h *HistoricalHandler) GetHistoricalRate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// ---- CACHE CHECK (raw bytes) ----
-	cacheKey := fmt.Sprintf("%s|%s|%s", dateStr, source, target)
-	h.Cache.Mu.RLock()
-	if raw, ok := h.Cache.Data[cacheKey]; ok {
-		h.Cache.Mu.RUnlock()
+	// Memcached cache key
+	cacheKey := fmt.Sprintf("historical:%s|%s|%s", dateStr, source, target)
+
+	// Try Memcached first
+	if item, err := config.MC.Get(cacheKey); err == nil {
+		// Cache hit
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Cache", "HIT")
-		_, _ = w.Write(raw)
+		_, _ = w.Write(item.Value)
+		return
+	} else if err != memcache.ErrCacheMiss {
+		http.Error(w, "error fetching from cache: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	h.Cache.Mu.RUnlock()
-	// ---- END CACHE CHECK ----
 
-	apiURL := fmt.Sprintf(
-	"%s?access_key=%s&start_date=%s&end_date=%s&source=%s&currencies=%s&format=1",
-	apiBaseURL,
-	apiKey,
-	dateStr, dateStr, source, target,
-)
+	// Use singleflight to avoid duplicate API fetch for same key
+	v, err, _ := config.HistoricalGroup.Do(cacheKey, func() (interface{}, error) {
+		// Check cache again inside singleflight (another goroutine might have set it)
+		if item, err := config.MC.Get(cacheKey); err == nil {
+			return item.Value, nil
+		}
 
-	resp, err := http.Get(apiURL)
+		// Fetch from API
+		apiURL := fmt.Sprintf(
+			"http://api.exchangerate.host/timeframe?access_key=%s&start_date=%s&end_date=%s&source=%s&currencies=%s&format=1",
+			"3fc5b2c59ffad185558841035e114b9c",
+			dateStr, dateStr, source, target,
+		)
+
+		resp, err := http.Get(apiURL)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("external API error: %s", resp.Status)
+		}
+
+		raw, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		// Store in Memcached for 24 hours
+		if err := config.MC.Set(&memcache.Item{
+			Key:        cacheKey,
+			Value:      raw,
+			Expiration: 86400,
+		}); err != nil {
+			fmt.Println("Warning: could not set Memcached:", err)
+		}
+
+		return raw, nil
+	})
+
 	if err != nil {
-		http.Error(w, "failed to fetch historical rate", http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		http.Error(w, "external API error", http.StatusInternalServerError)
+		http.Error(w, "failed to fetch historical rate: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		http.Error(w, "failed to read API response", http.StatusInternalServerError)
-		return
-	}
-
-	// Store in cache
-	h.Cache.Mu.Lock()
-	h.Cache.Data[cacheKey] = raw
-	h.Cache.Since[cacheKey] = time.Now()
-	h.Cache.Mu.Unlock()
-
+	// Response
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Cache", "MISS")
-	_, _ = w.Write(raw)
+	_, _ = w.Write(v.([]byte))
 }

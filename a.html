@@ -1,0 +1,14 @@
+docker pull memcached:alpine
+
+
+
+docker rm -f my-memcached
+docker run -d --name my-memcached \
+    -p 11211:11211 \
+    memcached:alpine \
+    memcached -m 64 -t 4
+
+
+
+
+http://localhost:8080/convert?from=USD&to=INR&amount=100&date=2024-08-14
