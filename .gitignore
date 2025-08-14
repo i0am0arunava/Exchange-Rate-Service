@@ -1,0 +1,9 @@
+/bin/
+/out/
+/dist/
+/vendor/
+/.coverage
+*.log
+*.DS_Store
+internal/
+pkg/
