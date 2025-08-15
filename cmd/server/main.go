@@ -6,7 +6,7 @@ import (
 	"os"
 	"log"
     "time"
-	"github.com/bradfitz/gomemcache/memcache"
+	
 	"exchange-rate-service/internal/config" 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -45,11 +45,12 @@ func init() {
 
 
 func main() {
+	config.InitMemcached()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-    config.MC = memcache.New("localhost:11211")
+   
     r := mux.NewRouter()
     r.HandleFunc("/latest", handler.GetLatestRate).Methods("GET")
     r.HandleFunc("/convert", handler.ConvertAmount).Methods("GET")

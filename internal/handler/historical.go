@@ -36,12 +36,12 @@ func GetHistoricalRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Memcached cache key
+	
 	cacheKey := fmt.Sprintf("historical:%s|%s|%s", dateStr, source, target)
 
-	// Try Memcached first
+	
 	if item, err := config.MC.Get(cacheKey); err == nil {
-		// Cache hit
+		
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Cache", "HIT")
 		_, _ = w.Write(item.Value)
@@ -58,7 +58,7 @@ func GetHistoricalRate(w http.ResponseWriter, r *http.Request) {
 			return item.Value, nil
 		}
         
-		// Fetch from API
+		
 
 		 historicalBaseURL := os.Getenv("HISTORICAL_API_BASE_URL")
          historicalAPIKey := os.Getenv("HISTORICAL_API_KEY")
@@ -88,7 +88,7 @@ func GetHistoricalRate(w http.ResponseWriter, r *http.Request) {
 			return nil, err
 		}
 
-		// Store in Memcached for 24 hours
+		
 		if err := config.MC.Set(&memcache.Item{
 			Key:        cacheKey,
 			Value:      raw,
@@ -105,7 +105,7 @@ func GetHistoricalRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Response
+	
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Cache", "MISS")
 	_, _ = w.Write(v.([]byte))

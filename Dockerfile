@@ -1,7 +1,8 @@
 # --------------------------
 # 1️⃣ Build stage (Alpine-based Go)
 # --------------------------
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23-alpine AS builder
+
 
 # Install build tools
 RUN apk add --no-cache git

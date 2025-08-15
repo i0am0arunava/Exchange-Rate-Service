@@ -34,5 +34,3 @@ Thumbs.db
 # Test cache
 coverage.out
 
-# Keep env files
-!*.env

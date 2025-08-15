@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: exchange-rate-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - memcached
+    environment:
+      MEMCACHED_HOST: memcached:11211
+      API_BASE_URL: https://api.exchangerate.host
+    restart: always
+
+  memcached:
+    image: memcached:1.6-alpine
+    container_name: memcached
+    ports:
+      - "11211:11211"
+    restart: always

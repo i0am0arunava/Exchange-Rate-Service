@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	
-	
     "exchange-rate-service/internal/config"
 	"github.com/bradfitz/gomemcache/memcache"
 	

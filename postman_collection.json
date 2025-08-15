@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "Currency API",
+    "_postman_id": "e38a3b3e-9b74-4e80-9b0b-6b9a5dba8b83",
+    "description": "Collection for testing currency API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Latest Rates (Base USD)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/latest?base=USD",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["latest"],
+          "query": [
+            { "key": "base", "value": "USD" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Convert Without Date (USD → INR)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/convert?from=USD&to=INR&amount=100",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["convert"],
+          "query": [
+            { "key": "from", "value": "USD" },
+            { "key": "to", "value": "INR" },
+            { "key": "amount", "value": "100" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Convert With Date (USD → INR)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/convert?from=USD&to=INR&amount=100&date=2024-08-14",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["convert"],
+          "query": [
+            { "key": "from", "value": "USD" },
+            { "key": "to", "value": "INR" },
+            { "key": "amount", "value": "100" },
+            { "key": "date", "value": "2024-08-14" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Convert With Date (BSD → INR)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/convert?from=BSD&to=INR&amount=100&date=2024-08-14",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["convert"],
+          "query": [
+            { "key": "from", "value": "BSD" },
+            { "key": "to", "value": "INR" },
+            { "key": "amount", "value": "100" },
+            { "key": "date", "value": "2024-08-14" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Historical (Within 90 Days) USD → INR",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/historical?date=2025-08-01&source=USD&target=INR",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["historical"],
+          "query": [
+            { "key": "date", "value": "2025-08-01" },
+            { "key": "source", "value": "USD" },
+            { "key": "target", "value": "INR" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Historical (More than 90 Days) USD → INR",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/historical?date=2025-03-01&source=USD&target=INR",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["historical"],
+          "query": [
+            { "key": "date", "value": "2025-03-01" },
+            { "key": "source", "value": "USD" },
+            { "key": "target", "value": "INR" }
+          ]
+        }
+      }
+    }
+  ]
+}

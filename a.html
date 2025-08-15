@@ -9,6 +9,13 @@ docker run -d --name my-memcached \
     memcached -m 64 -t 4
 
 
-
+docker compose up --build
+docker compose up 
 
 http://localhost:8080/convert?from=USD&to=INR&amount=100&date=2024-08-14
+
+
+
+for testing gunit test make sure memecahe is runnigninside docker 
+
+go test -v ./internal/handler

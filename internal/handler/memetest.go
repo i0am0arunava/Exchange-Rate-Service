@@ -9,7 +9,7 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-// MemTestHandler tests storing and retrieving a value from Memcached
+
 func MemTestHandler(w http.ResponseWriter, r *http.Request) {
 	key := "test-key"
 	value := []byte("Hello from Memcached!")
@@ -20,14 +20,14 @@ func MemTestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retrieve from Memcached
+	
 	item, err := config.MC.Get(key)
 	if err != nil {
 		http.Error(w, "Get failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Return JSON response
+	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"stored":  string(value),
