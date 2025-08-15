@@ -1,4 +1,4 @@
-// latest_test.go
+
 package handler_test
 
 import (
@@ -16,10 +16,10 @@ import (
 
 
 func TestGetLatestRate_CacheHit(t *testing.T) {
-	// Make sure Memcached is running
+	
 	config.MC = memcache.New("localhost:11211")
 
-	// Prepare test data in cache
+	
 	cacheKey := "latest:USD"
 	rates := map[string]float64{"EUR": 0.85, "INR": 83.0}
 	data, _ := json.Marshal(rates)
