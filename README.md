@@ -223,10 +223,9 @@ curl -X GET "http://localhost:8080/historical?date=2025-03-01&source=USD&target=
 }
 ```
 
-Possible errors:
+Possible error:
 - **400 Bad Request** – Missing or invalid parameters.
-- **404 Not Found** – Data not available for the given date/currency.
-- **500 Internal Server Error** – Server-side failure.
+
 
 ---
 
@@ -271,11 +270,10 @@ EXCHANGE-RATE-SERVICE/
 ## Concurrency & Scaling Strategy
 
 - **Efficient Concurrency Handling**  
-  - Go's built-in goroutines and channels are used for lightweight concurrent processing.  
   - API handlers are non-blocking where possible, ensuring high throughput.
     
 - **Memcache for Caching**  
-  - Using in-memory caching with **Memcache**, shared across instances.  
+  - Used in-memory caching with **Memcache**, shared across instances.  
   - Automatically handles race conditions internally, so concurrent requests for the same key do not cause data corruption.  
   - Stores frequently requested exchange rates to reduce API latency and upstream API calls.  
   - TTL ensures stale data is automatically purged.  
@@ -309,8 +307,9 @@ EXCHANGE-RATE-SERVICE/
 - The exchangerate.host API is always available and responds correctly when `"success": true`.
 - In-memory caching helps avoid hitting the API for every request, thus reducing response time.
 - Since Memcached is being used, it automatically handles concurrency for cached data access.
+- A background goroutine will periodically hit the API with base currency USD to fetch the updated exchange rates every hour while the server is running, keeping the cache fresh.
 
-## follow this architecture
+## This Backend service follow this architecture
 
 <img width="594" height="274" alt="Screenshot from 2025-08-15 10-09-04" src="https://github.com/user-attachments/assets/ec22948e-4107-40c0-a9fb-140cfd4e4afe" />
 
