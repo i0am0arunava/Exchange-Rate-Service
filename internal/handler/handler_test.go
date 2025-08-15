@@ -5,22 +5,17 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-
-	"testing"
-
-	"exchange-rate-service/internal/config"
+    "testing"
+    "exchange-rate-service/internal/config"
 	"exchange-rate-service/internal/handler"
-
-	"github.com/bradfitz/gomemcache/memcache"
+    "github.com/bradfitz/gomemcache/memcache"
 )
 
 
 func TestGetLatestRate_CacheHit(t *testing.T) {
 	
 	config.MC = memcache.New("localhost:11211")
-
-	
-	cacheKey := "latest:USD"
+    cacheKey := "latest:USD"
 	rates := map[string]float64{"EUR": 0.85, "INR": 83.0}
 	data, _ := json.Marshal(rates)
 	err := config.MC.Set(&memcache.Item{Key: cacheKey, Value: data, Expiration: 30})

@@ -14,7 +14,6 @@ var (
 	HistoricalGroup singleflight.Group
 )
 
-
 func InitMemcached() {
 	host := os.Getenv("MEMCACHED_HOST")
 	if host == "" {
