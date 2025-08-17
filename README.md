@@ -3,7 +3,7 @@
 
 ## Basic setup
 
-1. Start your API service:
+1. Start  API service:
    ```bash
    git clone https://github.com/i0am0arunava/Exchange-Rate-Service.git
    ```
