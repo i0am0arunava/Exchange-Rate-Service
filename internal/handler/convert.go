@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
     "os"
     "log"
 	"exchange-rate-service/internal/config"
@@ -19,10 +20,117 @@ func ConvertAmount(w http.ResponseWriter, r *http.Request) {
 	from := r.URL.Query().Get("from")
 	to := r.URL.Query().Get("to")
 	amountStr := r.URL.Query().Get("amount")
-	dateStr := r.URL.Query().Get("date")
+	fromDate := r.URL.Query().Get("fromDate")
+	toDate := r.URL.Query().Get("toDate")
+     
 
-        if dateStr != "" {
-    cacheKey := fmt.Sprintf("historical:%s:%s:%s:%s", from, to, amountStr, dateStr)
+
+     
+
+
+ if(fromDate!="" && toDate!=""){
+
+	if toDate =="" || fromDate == "" || from == "" || to == "" {
+		http.Error(w, "missing date, source, or target query param", http.StatusBadRequest)
+		return
+	}
+
+	reqDate, err := time.Parse("2006-01-02", toDate)
+	if err != nil {
+		http.Error(w, "invalid date format, use YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+
+	if time.Since(reqDate).Hours() > 90*24 {
+		http.Error(w, "date exceeds 90-day history limit", http.StatusBadRequest)
+		return
+	}
+
+	
+	cacheKey := fmt.Sprintf("historical:%s|%s|%s|%s", fromDate,toDate, from, to)
+
+	
+	if item, err := config.MC.Get(cacheKey); err == nil {
+		
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Cache", "HIT")
+		_, _ = w.Write(item.Value)
+		return
+	} else if err != memcache.ErrCacheMiss {
+		http.Error(w, "error fetching from cache: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Use singleflight to avoid duplicate API fetch for same key
+	v, err, _ := config.HistoricalGroup.Do(cacheKey, func() (interface{}, error) {
+		// Check cache again inside singleflight (another goroutine might have set it)
+		if item, err := config.MC.Get(cacheKey); err == nil {
+			return item.Value, nil
+		}
+        
+		
+
+		 historicalBaseURL := os.Getenv("HISTORICAL_API_BASE_URL")
+         historicalAPIKey := os.Getenv("HISTORICAL_API_KEY")
+
+         if historicalBaseURL == "" || historicalAPIKey == "" {
+         log.Fatal("HISTORICAL_API_BASE_URL or HISTORICAL_API_KEY is not set in environment variables")
+         }
+		apiURL := fmt.Sprintf(
+       "%s?access_key=%s&start_date=%s&end_date=%s&source=%s&currencies=%s&format=1",
+        historicalBaseURL,
+        historicalAPIKey,
+       fromDate, toDate, from, to,
+       )
+
+		resp, err := http.Get(apiURL)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("external API error: %s", resp.Status)
+		}
+
+		raw, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		
+		if err := config.MC.Set(&memcache.Item{
+			Key:        cacheKey,
+			Value:      raw,
+			Expiration: 86400,
+		}); err != nil {
+			fmt.Println("Warning: could not set Memcached:", err)
+		}
+
+		return raw, nil
+	})
+
+	if err != nil {
+		http.Error(w, "failed to fetch historical rate: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Cache", "MISS")
+	_, _ = w.Write(v.([]byte))
+
+		  }
+
+
+
+        
+
+
+
+
+    if fromDate != "" {
+       cacheKey := fmt.Sprintf("historical:%s:%s:%s:%s", from, to, amountStr, fromDate)
 
    
     if item, err := config.MC.Get(cacheKey); err == nil {
@@ -42,7 +150,7 @@ func ConvertAmount(w http.ResponseWriter, r *http.Request) {
    
     apiURL := fmt.Sprintf(
         "https://api.exchangerate.host/convert?access_key=2ac108b461f57948c41e61ff6a0e210f&from=%s&to=%s&amount=%s&format=1&date=%s",
-        from, to, amountStr, dateStr,
+        from, to, amountStr, fromDate,
     )
 
     resp, err := http.Get(apiURL)

@@ -1,0 +1,221 @@
+{
+	"info": {
+		"_postman_id": "28bec4ee-d1ea-4895-a04a-8940308548de",
+		"name": "Currency API",
+		"description": "Collection for testing currency API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "29772803"
+	},
+	"item": [
+		{
+			"name": "Latest Rates (Base USD)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/latest?base=USD",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"latest"
+					],
+					"query": [
+						{
+							"key": "base",
+							"value": "USD"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Convert Without Date (USD → INR)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/convertOrGetHistorical?from=USD&to=INR&amount=10000222",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"convertOrGetHistorical"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "USD"
+						},
+						{
+							"key": "to",
+							"value": "INR"
+						},
+						{
+							"key": "amount",
+							"value": "10000222"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Convert With Date (USD → INR)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/convertOrGetHistorical?from=USD&to=INR&amount=100&fromDate=2023-10-14",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"convertOrGetHistorical"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "USD"
+						},
+						{
+							"key": "to",
+							"value": "INR"
+						},
+						{
+							"key": "amount",
+							"value": "100"
+						},
+						{
+							"key": "fromDate",
+							"value": "2023-10-14"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Convert With Date (BSD → INR)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/convertOrGetHistorical?from=BSD&to=INR&amount=100&fromDate=2024-01-14",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"convertOrGetHistorical"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "BSD"
+						},
+						{
+							"key": "to",
+							"value": "INR"
+						},
+						{
+							"key": "amount",
+							"value": "100"
+						},
+						{
+							"key": "fromDate",
+							"value": "2024-01-14"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Historical (Within 90 Days) USD → INR",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/convertOrGetHistorical?from=USD&to=INR&fromDate=2025-08-01&toDate=2025-08-06",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"convertOrGetHistorical"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "USD"
+						},
+						{
+							"key": "to",
+							"value": "INR"
+						},
+						{
+							"key": "fromDate",
+							"value": "2025-08-01"
+						},
+						{
+							"key": "toDate",
+							"value": "2025-08-06"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Historical (More than 90 Days) USD → INR",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/convertOrGetHistorical?&from=USD&to=INR&fromDate=2024-08-01&toDate=2025-01-07",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"convertOrGetHistorical"
+					],
+					"query": [
+						{
+							"key": null,
+							"value": null
+						},
+						{
+							"key": "from",
+							"value": "USD"
+						},
+						{
+							"key": "to",
+							"value": "INR"
+						},
+						{
+							"key": "fromDate",
+							"value": "2024-08-01"
+						},
+						{
+							"key": "toDate",
+							"value": "2025-01-07"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

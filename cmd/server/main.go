@@ -53,24 +53,26 @@ func main() {
    
     r := mux.NewRouter()
     r.HandleFunc("/latest", handler.GetLatestRate).Methods("GET")
-    r.HandleFunc("/convert", handler.ConvertAmount).Methods("GET")
-    r.HandleFunc("/historical", handler.GetHistoricalRate).Methods("GET")
-    r.HandleFunc("/mem-test", handler.MemTestHandler).Methods("GET")
+    r.HandleFunc("/convertOrGetHistorical", handler.ConvertAmount).Methods("GET")
+   
+ 
 
 	
     go startHourlyRefresh("USD") 
 	fmt.Println("Listening on :" + port)
-	http.ListenAndServe(":"+port, r)
+	http.ListenAndServe(":"+port, r) 
 }
 
 
-// hourly refresh goroutine
+
 func startHourlyRefresh(base string) {
-	ticker := time.NewTicker(time.Hour)
+	ticker := time.NewTicker(time.Hour)  
 	defer ticker.Stop()
 	 service.RefreshLatestRates(base)
-	 for range ticker.C {
+	 for range ticker.C {      //
 		service.RefreshLatestRates(base)
 
 	}
 }
+
+
