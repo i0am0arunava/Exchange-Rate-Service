@@ -149,7 +149,7 @@ func ConvertAmount(w http.ResponseWriter, r *http.Request) {
 
    
     apiURL := fmt.Sprintf(
-        "https://api.exchangerate.host/convert?access_key=2ac108b461f57948c41e61ff6a0e210f&from=%s&to=%s&amount=%s&format=1&date=%s",
+        "https://api.exchangerate.host/convert?access_key=84c55c279cdb130c67a3c3992c21f24c&from=%s&to=%s&amount=%s&format=1&date=%s",
         from, to, amountStr, fromDate,
     )
 

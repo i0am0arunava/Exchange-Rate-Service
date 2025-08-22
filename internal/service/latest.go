@@ -15,7 +15,7 @@ func RefreshLatestRates(base string) {
 	   
 
    
-	 baseURL := "https://v6.exchangerate-api.com/v6/95062a356f64133207942a0c"
+	 baseURL := "https://v6.exchangerate-api.com/v6/dd8a2660664f756430ea7b73"
      
 
 	   // Use singleflight to ensure only one API fetch for the same base currency
