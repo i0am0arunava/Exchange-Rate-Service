@@ -48,7 +48,7 @@ Follow the steps below to run the unit tests for this project.
 
 ## Postman Collection
 
-📥 **[Download Postman Collection](https://drive.google.com/file/d/1IlYumThjjYwqz4VBoLlfVNbB7hfjGY8i/view?usp=drive_link)**
+📥 **[Download Postman Collection](https://drive.google.com/file/d/1YhF8jBBFAHnVAV1rWVxGC3qdXmIN1wtO/view?usp=sharing)**
 
 ## postman testcas
 
@@ -71,147 +71,23 @@ http://localhost:8080
 
 ## Endpoints
 
-### 1. **Get Latest Exchange Rates**
-
-Fetches the latest exchange rates based on a given base currency.
-
-**Request**
-```bash
+# 1. Latest Rates (Base USD)
 curl -X GET "http://localhost:8080/latest?base=USD"
-```
 
-**Query Parameters**
-| Name | Type   | Required | Description |
-|------|--------|----------|-------------|
-| base | String | Yes      | The base currency code (e.g., `USD`, `EUR`, `INR`). |
+# 2. Convert Without Date (USD → INR)
+curl -X GET "http://localhost:8080/convertOrGetHistorical?from=USD&to=INR&amount=10000222"
 
-**Example Response**
-```json
-{
-  "base": "USD",
-  "date": "2025-08-15",
-  "rates": {
-    "INR": 83.21,
-    "EUR": 0.91,
-    "GBP": 0.78
-  }
-}
-```
+# 3. Convert With Date (USD → INR, Single Date)
+curl -X GET "http://localhost:8080/convertOrGetHistorical?from=USD&to=INR&amount=100&fromDate=2023-10-14"
 
----
+# 4. Convert With Date (BSD → INR, Single Date)
+curl -X GET "http://localhost:8080/convertOrGetHistorical?from=BSD&to=INR&amount=100&fromDate=2024-01-14"
 
-### 2. **Convert Currency (Latest Rate)**
+# 5. Historical (Within 90 Days) USD → INR
+curl -X GET "http://localhost:8080/convertOrGetHistorical?from=USD&to=INR&fromDate=2025-08-01&toDate=2025-08-06"
 
-Converts an amount from one currency to another using the latest available rates.
-
-**Request**
-```bash
-curl -X GET "http://localhost:8080/convert?from=USD&to=INR&amount=100"
-```
-
-**Query Parameters**
-| Name   | Type    | Required | Description |
-|--------|---------|----------|-------------|
-| from   | String  | Yes      | Source currency code. |
-| to     | String  | Yes      | Target currency code. |
-| amount | Number  | Yes      | Amount to convert. |
-
-**Example Response**
-```json
-{
-  "from": "USD",
-  "to": "INR",
-  "amount": 100,
-  "converted": 8321,
-  "rate": 83.21,
-  "date": "2025-08-15"
-}
-```
-
----
-
-### 3. **Convert Currency (Historical Rate)**
-
-Converts an amount based on rates from a specific date.
-
-**Request**
-```bash
-curl -X GET "http://localhost:8080/convert?from=USD&to=INR&amount=100&date=2024-08-14"
-```
-or
-```bash
-curl -X GET "http://localhost:8080/convert?from=BSD&to=INR&amount=100&date=2024-08-14"
-```
-
-**Query Parameters**
-| Name   | Type    | Required | Description |
-|--------|---------|----------|-------------|
-| from   | String  | Yes      | Source currency code. |
-| to     | String  | Yes      | Target currency code. |
-| amount | Number  | Yes      | Amount to convert. |
-| date   | String  | Yes      | Historical date in `YYYY-MM-DD` format. |
-
-**Example Response**
-```json
-{
-  "from": "USD",
-  "to": "INR",
-  "amount": 100,
-  "converted": 8275,
-  "rate": 82.75,
-  "date": "2024-08-14"
-}
-```
-
----
-
-### 4. **Get Historical Rate (Within 90 Days)**
-
-Fetches historical exchange rates for a date within the last 90 days.
-
-**Request**
-```bash
-curl -X GET "http://localhost:8080/historical?date=2025-08-01&source=USD&target=INR"
-```
-
-**Query Parameters**
-| Name   | Type   | Required | Description |
-|--------|--------|----------|-------------|
-| date   | String | Yes      | Historical date in `YYYY-MM-DD`. |
-| source | String | Yes      | Source currency code. |
-| target | String | Yes      | Target currency code. |
-
-**Example Response**
-```json
-{
-  "date": "2025-08-01",
-  "source": "USD",
-  "target": "INR",
-  "rate": 83.05
-}
-```
-
----
-
-### 5. **Get Historical Rate (More than 90 Days)**
-
-Fetches historical exchange rates for a date older than 90 days.
-
-**Request**
-```bash
-curl -X GET "http://localhost:8080/historical?date=2025-03-01&source=USD&target=INR"
-```
-
-**Example Response**
-```json
-{
-  "date": "2025-03-01",
-  "source": "USD",
-  "target": "INR",
-  "rate": 82.10
-}
-```
-
+# 6. Historical (More than 90 Days → ❌ rejected)
+curl -X GET "http://localhost:8080/convertOrGetHistorical?from=USD&to=INR&fromDate=2024-08-01&toDate=2025-01-07"
 ---
 
 ## Error Handling
